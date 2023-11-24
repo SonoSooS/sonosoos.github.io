@@ -29,7 +29,6 @@ h2
     font-style: italic;
     display: inline-block;
     padding-right: 0.5em;
-    margin-top: -1em;
     margin-left: 0.5em;
 }
 
@@ -38,7 +37,7 @@ h3
     font-size: 1.2em;
     display: inline-block;
     padding-right: 0.5em;
-    margin-bottom: -1em;
+    margin-bottom: -0.5em;
     margin-left: 1em;
 }
 
