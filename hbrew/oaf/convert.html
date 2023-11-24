@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>open_agb_firm EEPROM save converter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta property="og:title" content="open_agb_firm EEPROM save converter - Shacked Woodmill" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="" />
+<meta property="og:description" content="Tool used for fixing EEPROM saves to be compatible with open_agb_firm" />
+<style>
+body
+{
+    font-family: 'SF Mono', 'Fira Code Retina', 'Fira Code', 'Consolas', 'EmojiOne Color', 'Comic Sans MS', 'Segoe UI', monospace;
+    background: black;
+    color: white;
+    font-size: 1em;
+}
+
+PRE
+{
+    white-space: pre-line;
+    word-wrap: break-all;
+    overflow-wrap: break-word;
+}
+</style>
+</head>
+<body>
+    <noscript>
+    Sorry, this tool is written in Javascript!
+    You can safely enable it though, as there is no tracking.
+    </noscript>
+    <PRE id="logger"></PRE>
+    <div id="content"></div>
+    <div id="workaround"></div>
+    <script>
+    var logger = document.getElementById('logger');
+    var content = document.getElementById('content');
+    var workarounddl = document.getElementById('workaround');
+    
+    var uploader = null;
+    
+    function clearlog()
+    {
+        logger.innerHTML = '';
+        logger.innerText = '';
+    }
+    
+    function log()
+    {
+        var params = Array.prototype.slice.call(arguments).map(function(input)
+        {
+            return "" + input;
+        });
+        logger.innerHTML += params.join(' ') + '<br/>'; // don't XSS yourself pls kthx
+    }
+    
+    function debug()
+    {
+        console.log.apply(console, arguments);
+        log.apply(null, arguments);
+    }
+    
+    function contentreset()
+    {
+        content.innerHTML = '';
+        
+        uploader = null;
+    }
+    
+    function contentinit()
+    {
+        contentreset();
+        
+        log("Upload the EEPROM .sav file which you want to fix");
+        
+        uploader = document.createElement('input');
+        uploader.type = 'file';
+        uploader.onchange = function(e)
+        {
+            clearlog();
+            workarounddl.innerHTML = '';
+            
+            //debug(e);
+            
+            if(e.target.files.length != 1)
+            {
+                log("Please only select a single .sav file! Multiple files are not supported yet.");
+                return;
+            }
+            
+            var file = e.target.files[0];
+            var filesize = file.size;
+            if(filesize !== (filesize | 0))
+            {
+                log("The file is too big, or your browser is misbehaving. Either way, " + filesize + " for the file size doesn't look right.");
+                return;
+            }
+            
+            if((filesize < 8) || (filesize & (filesize - 1)))
+            {
+                log("The file doesn't seem to be a valid EEPROM .sav");
+                return;
+            }
+            
+            var filereader = new FileReader();
+            filereader.onerror = function(fee)
+            {
+                debug(fee);
+                debug("[FAIL]", "Can't read the file.", fee.target.error);
+                filereader.abort();
+            };
+            
+            filereader.onload = function(fle)
+            {
+                //debug(fle);
+                
+                var rawdata = fle.target.result;
+                debug(rawdata);
+                
+                var data = new Uint8Array(rawdata);
+                var datalen = data.length;
+                
+                if(datalen < 8 || datalen !== (datalen | 0) || (datalen & (datalen - 1)))
+                {
+                    log("[FAIL]", "The readed file bypassed sanity checks. Was it modified in the background?");
+                    return;
+                }
+                
+                //debug(data);
+                
+                log("Performing conversion, please wait...");
+                
+                for(var i = 0; i < datalen; i += 8)
+                {
+                    var tmp;
+                    
+                    tmp = data[0];
+                    data[0] = data[7];
+                    data[7] = tmp;
+                    
+                    tmp = data[1];
+                    data[1] = data[6];
+                    data[6] = tmp;
+                    
+                    tmp = data[2];
+                    data[2] = data[5];
+                    data[5] = tmp;
+                    
+                    tmp = data[3];
+                    data[3] = data[4];
+                    data[4] = tmp;
+                }
+                
+                log("Generating download...");
+                
+                var newblob = new Blob([data], {type: 'application/octet-stream'});
+                
+                if(navigator.msSaveBlob)
+                {
+                    log("Internet Explorer support detected, trying to save file...");
+                    if(navigator.msSaveBlob(newblob, file.name))
+                    {
+                        //clearlog();
+                        log("Success! The file download should begin.");
+                        return;
+                    }
+                    
+                    if(typeof URL === 'undefined' || typeof URL.createObjectURL === 'undefined')
+                    {
+                        log("Unsupported Internet Explorer version. Please try Edge or Firefox.");
+                        return;
+                    }
+                }
+                
+                var bloburl = URL.createObjectURL(newblob);
+                
+                var a = document.createElement('a');
+                a.name = 'senzawa';
+                a.download = file.name;
+                a.href = bloburl;
+                a.innerText = 'Download ' + file.name;
+                
+                workarounddl.innerHTML = '';
+                workarounddl.appendChild(a);
+                
+                a.onclick = function(e)
+                {
+                    // bug workaround
+                    setTimeout(function()
+                    {
+                        URL.revokeObjectURL(bloburl);
+                        workarounddl.innerHTML = '';
+                        
+                        contentreset();
+                        contentinit();
+                        
+                        if(navigator.userAgent.indexOf("Android ") >= 0 &&
+                           navigator.userAgent.indexOf("Chrome/") >= 0)
+                        {
+                            log("[INFO]",
+                                "Due to a bug in Chrome, it may download the file successfully, " +
+                                "even if it says \"download failed due to unknown error\" afterwards.");
+                        }
+                    }, 0);
+                }
+                
+                log("Download should start automatically, or click the Download link below if it doesn't");
+                workarounddl.appendChild(a);
+                
+                setTimeout(function()
+                {
+                    a.click();
+                }, 0);
+            };
+            
+            log("Reading save...");
+            filereader.readAsArrayBuffer(file);
+        };
+        content.appendChild(uploader);
+    }
+    
+    function checkcompat()
+    {
+        var testval = 'lol';
+        
+        var success = true;
+        
+        if((testval = typeof ArrayBuffer) !== 'function')
+        {
+            debug("[FAIL]", "ArrayBuffer is ", testval);
+            success = false;
+        }
+        
+        if((testval = typeof Blob) !== 'function')
+        {
+            debug("[FAIL]", "Blob is ", testval);
+            success = false;
+        }
+        
+        if((testval = typeof File) !== 'function' && testval !== 'object')
+        {
+            debug("[FAIL]", "File is ", testval);
+            success = false;
+        }
+        
+        if((testval = typeof FileReader) !== 'function')
+        {
+            debug("[FAIL]", "FileReader is ", testval);
+            success = false;
+        }
+        else if((testval = typeof FileReader.prototype.readAsArrayBuffer) !== 'function')
+        {
+            debug("[FAIL]", "FileReader ArrayBuffer support is ", testval);
+            success = false;
+        }
+        
+        if((testval = typeof Uint8Array) !== 'function')
+        {
+            debug("[FAIL]", "Uint8Array is ", testval);
+            success = false;
+        }
+        
+        if((testval = typeof navigator.msSaveBlob) === 'function')
+        {
+            debug("[INFO]", "Using experimental Internet Explorer support");
+        }
+        else if((testval = typeof URL) !== 'function' || (testval = typeof URL.createObjectURL) !== 'function')
+        {
+            debug("[FAIL]", "Download generation is ", testval);
+            success = false;
+        }
+        
+        return success;
+    }
+    
+    function checkwebview()
+    {
+        var uagent = navigator.userAgent;
+        
+        return true && // DO NOT REMOVE, SEMICOLON WORKAROUND
+            uagent.indexOf("Mozilla/5.0 ") >= 0 &&
+            uagent.indexOf("AppleWebKit/") >= 0 &&
+            uagent.indexOf("Build/") >= 0 &&
+            uagent.indexOf("Version/4.0") >= 0 &&
+            //uagent.indexOf("Mobile ") >= 0 &&
+            uagent.indexOf("Safari/") >= 0 &&
+            
+            uagent.indexOf("Maxthon/") < 0 &&
+            uagent.indexOf("UCBrowser/") < 0 &&
+            uagent.indexOf("Opera/") < 0 &&
+            
+            true
+            ;
+    }
+    
+    function checkios()
+    {
+        return false;
+    }
+    
+    clearlog();
+    contentreset();
+    
+    //debug(typeof Android, navigator.userAgent);
+    
+    if(checkwebview())
+    {
+        log(
+            "Sorry, but due to a bug in Android's download framework, " +
+            "you can NOT download the fixed saves, so you can't use this tool. " +
+            "Try Firefox or Opera Beta instead.");
+        log();
+        log("If you're using a browser with built-in download support, please report this:");
+        log(navigator.userAgent);
+    }
+    else if(!checkcompat())
+    {
+        log("Sorry, your browser is too old for this to work. Please report the output above if you think this is wrong.");
+    }
+    else if(checkios())
+    {
+        log("iOS doesn't even have a file browser... Try using your Mac instead.");
+    }
+    else
+    {
+        contentinit();
+    }
+    </script>
+</body>
+</html>

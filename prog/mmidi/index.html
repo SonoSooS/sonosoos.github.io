@@ -1,0 +1,202 @@
+<html>
+<head>
+<title>mmidi by Sono - Shacked Woodmill</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="/dum.css"/>
+</head>
+<body>
+<h1>mmidi</h1>
+
+mmidi is a very optimized MIDI player written in C using WINAPI.
+
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#editions">Editions</a><ul>
+<a href="#ed-mmidi">mmidi</a>
+<a href="#ed-mmopt">mmopt</a>
+<a href="#ed-nolag">mmnolag</a>
+<a href="#ed-morshu">MorshuMidi / mmm</a>
+<a href="#ed-mmmmidi">Morshu-mmidi</a>
+<a href="#ed-mmvis">mmvis</a>
+<a href="#ed-DFB">MMVis / DFB</a>
+<a href="#ed-mmex">ExtremeMIDI / extremm</a>
+</ul></li>
+<li><a href="#download">Downloads</a></li>
+<li><a href="#control">Controls for mmidi</a></li>
+<li><a href="#controlcoc">Controls for DFB</a></li>
+<li><a href="#inicoc">MMVis.ini documentation</a></li>
+</ul>
+
+
+<a name="editions"><h2>Editions</h2></a>
+<a name="ed-mmidi"><h3>mmidi</h3></a>
+    This is the original release. It comes with a visualizer and
+    mouse + keyboard controls. It works from NT 3.51 up to the latest.
+    Might also work in wine.
+    
+<a name="ed-mmopt"><h3>mmopt</h3></a>
+    This is just a stripped down version of mmidi. No visualizer, no controls,
+    just text and MIDI playing. Hardcoded MIDI device.
+    
+<a name="ed-nolag"><h3>mmnolag<sup>*</sup></h3></a>
+    This is a special release. It tries to "minimize" the MIDI by
+    stripping "unnecessary" events. It just works™
+    
+<a name="ed-morshu"><h3>MorshuMidi / mmm<sup>*</sup></h3></a>
+    This doesn't belong in the mmidi line because it doesn't use mmidi code.
+    This is written from scratch, everything stripped, very high performance.
+    Also, quite small. Very few CPU cycles per note.
+    Possibly the fastest available MIDI player.
+    
+<a name="ed-mmmmidi"><h3>Morshu-mmidi<sup>*</sup></h3></a>
+    This is MorshuMidi with mmidi's visualizer slapped on it.
+    Includes a more advanced scrolling control than mmidi.
+    Includes PFA mode (BPM-based scrolling).
+    Possibly the fastest MIDI player with built-in visualizer.
+    
+<a name="ed-mmvis"><h3>mmvis<sup>*</sup></h3></a>
+    This is a derivation of Morshu-mmidi. It includes some extra features
+    at the cost of slightly degraded performance. Still outperforms
+    basically every other MIDI player out there.
+    
+<a name="ed-DFB"><h3>MMVis / DFB<sup>*</sup></h3></a>
+    This is an attempt to create a Piano From Above clone for the
+    Black MIDI community which aims to look similar to the original
+    while outperforming it.
+
+<a name="ed-mmex"><h3>ExtremeMIDI / extremm<sup>*</sup></h3></a>
+    This is currently possibly the fastest and smallest MIDI player available.
+    The original MorshuMidi was equipped with an extra processing thread,
+    creating ExtremeMIDI. The new thread is capable of offloading
+    the slow note event processing to itself, allowing the main thread
+    to focus more on timing and real-time decoding
+    instead of waiting for the synth to process the incoming events.
+    This edition also comes equipped with smart noteskip,
+    so if note processing takes too long then, and only then
+    will it start skipping notes. The smart noteskip engine
+    tries to keep noteskip disabled as much as possible
+    to try to capture most of the melody as possible.
+
+<small>*: these only work with <a href="https://github.com/KeppySoftware/OmniMIDI/">OmniMIDI</a>.
+Other editions support WinMM and TiMidity++ too.
+</small>
+
+<!--
+<a name="download"><h2>Downloads</h2></a>
+<ul>
+<li><a href="data/">* browse all *</a></li>
+
+<li><a href="data/mmidi_mem.exe">mmidi_mem.exe (in-RAM, 64bit)</a></li>
+<li><a href="data/mmidi98_mem.exe">mmidi98_mem.exe (in-RAM, 32bit, NT3.51)</a></li>
+<li><a href="data/mmidi_mem_scroll.exe">mmidi_mem_scroll.exe (in-RAM, 64bit, constant scroll speed)</a></li>
+
+<li><a href="data/mmmmidi_mem.exe">mmmmidi_mem.exe (in-RAM, 64bit)</a></li>
+<li><a href="data/mmmmidi_mem_d.exe">mmmmidi_mem_d.exe (in-RAM, 64bit, benchmark edition)</a></li>
+<li><a href="data/mmmmidi_mem_d.exe">mmmmidi_qpcmemd.exe (in-RAM, 64bit, benchmark edition, QPC adaptive timer)</a></li>
+
+<li><a href="data/mmopt_mem.exe">mmopt_mem.exe (in-RAM, 64bit)</a></li>
+
+<li><a href="data/mmm32m.exe">mmm32m.exe (???)</a></li>
+
+<li><a href="data/mmm.exe">mmm.exe (in-RAM, 32bit)</a></li>
+<li><a href="data/mmm64.exe">mmm64.exe (in-RAM, 64bit)</a></li>
+<li><a href="data/mmm64d.exe">mmm64d.exe (in-RAM, 64bit, benchmark edition)</a></li>
+<li><a href="data/mmmmap.exe">mmmmap.exe (mmap, 32bit)</a></li>
+<li><a href="data/mmmmap64.exe">mmmmap64.exe (mmap, 64bit)</a></li>
+
+<li><a href="data/mmvis.exe">mmvis.exe (in-RAM, 64bit)</a></li>
+<li><a href="data/mmvisd.exe">mmvisd.exe (in-RAM, 64bit, benchmark edition)</a></li>
+<li><a href="data/mmmac.exe">mmmac.exe (in-RAM, ??bit, visualizer-less edition)</a></li>
+
+<li><a href="data/OpenTK.dll">OpenTK.dll (required, place next to MMVis.exe)</a></li>
+<li><a href="data/MMVis.exe">MMVis.exe</a></li>
+<li><a href="data/MMVis.ini">MMVis.ini (default configuration template)</a></li>
+<li><a href="data/coremod_DemoVis3D.dll">coremod_DemoVis3D.dll (includes two visualizers, place next to MMVis.exe)</a></li>
+<li><a href="data/coremod_DemoVis.dll">coremod_DemoVis.dll (no longer works)</a></li>
+<li><a href="data/DllMain.cs">DllMain.cs (coremod_DemoVis.dll source)</a></li>
+<li><a href="data/extremm.exe">extremm.exe (in-RAM, 64bit, smart noteskip engine enabled)</a></li>
+<li><a href="data/extremm_ns.exe">extremm_ns.exe (in-RAM, 64bit, noteskip disabled)</a></li>
+</ul>
+-->
+
+<a name="control"><h2>mmidi controls</h2></a>
+- <code>SPACE</code> - play/pause
+- <code>SHIFT+SPACE</code> - pause without MIDI reset
+- <code>UP/DOWN</code> - slow down/speed up playback +- 0.01
+- <code>SHIFT+ UP/DOWN</code> - slow down/speed up playback +- 1
+- <code>LEFT</code> - set speed to 1x
+- <code>RIGHT</code> - hold to fast-worward at 10x
+- <code>SHIFT+RIGHT</code> - hold to fast-forward at ??? too fast speed
+- <code>SHIFT+LEFT</code> - reset MIDI (equal to pausing and unpausing)
+- <code>SHIFT+Q</code> - quit
+- <code>CTRL-C or BREAK</code> - emergency pause (not compatible with TiMidity++)
+<small>below is Morshu-mmidi only</small>
+- <code>ALT+ UP/DOWN</code> - adjust scroll value
+- <code>SHIFT+ALT+ UP/DOWN</code> - adjust scroll value 100x
+- <code>ALT+RIGHT</code> - toggle between 0 and -1 scroll speed
+- <code>ALT+LEFT</code> - set scroll based on current BPM
+
+Positive scroll speed means wait value/10000000 seconds per scroll.
+Negative scroll speed means wait -value * BPM * magic seconds per scroll.
+Zero scroll is fallback to mmidi behavior and is the most CPU-conservative.
+Too small bigger-than-zero values are too CPU-intensive. Use -1 or -2 instead.
+
+<a name="controlcoc"><h2>DFB controls</h2></a>
+- <code>CTRL-O</code> - open file
+- <code>CTRL-W</code> - close player and stop
+- <code>SPACE</code> - play/pause
+- <code>UP/DOWN</code> - slow down/speed up playback +- 0.01
+- <code>SHIFT+ UP/DOWN</code> - slow down/speed up playback +- 1
+- <code>LEFT</code> - set speed to 1x
+- <code>SHIFT+Q</code> - quit
+- hold <code>ALT</code> for 1s - open settings
+- tap <code>ALT</code> - close settings
+<small>Settings dialog options</small>
+- <code>UP/DOWN</code> - adjust first option
+- <code>LEFT/RIGHT</code> - adjust second option
+- <code>CTRL+ ARROW</code> - adjust value in real time
+- <code>SHIFT+ ARROW</code> - adjust value in big steps
+- <code>CTRL+SHIFT+ ARROW</code> - quickly adjust value in real time
+- <code>M</code> - change piano key design (piano vs. all-same) and change first and second option
+- <code>O</code> - toggle between 128 key and 256 key
+- <code>B</code> - toggle "rendering" mode with no audio for use with Bandicam's variable framerate capture option
+- <code>WS-AD-QE</code> - "rotate" camera left/right, up/down, in/out
+- <code>IK-JL-UO</code> - "move" camera left/right, up/down, in/out
+- <code>Y</code> or <code>Z</code> - reset camera to 128key projection
+
+<a name="inicoc"><h2>MMVis.ini documentation</h2></a>
+<small>[General]</small>
+ <code>VSync</code> - 0 = off | 1 = on | 2 = no VSync on lag (default)
+ <code>WindowMode</code> - 0 = 1024x768 window | 1 = minimized | 2 = maximized (default) | 3 = fullscreen
+ <code>TargetFPS</code> - 0 = no cap or VSync (default) | 1 to 1000 = limit FPS
+<small>[Visualizer]</small>
+ <code>ScrollMilis</code> - 1 to 10000 = the time it takes in miliseconds for the bottom of the note to reach the piano roll
+ <code>PlayerFPS</code> - 1 to 1000 = a hint to the note catcher to try to run around this FPS for less jittery scrolling
+ <code>LimitRow</code> - 0 = unlimited | unsigned nonzero = limit the amount of notes rendered in a column
+ <code>LimitMax</code> - 0 = unlimited | positive = limit the total rendered notes to this value | negative = -value * 1000 limit
+ <code>KeyboardType</code> - 0 = piano | 1 = white keys for all
+ <code>VisualizerClass</code> - class name or fully qualified name for the visualizer to use (default = NoteVisDFB)
+<small>[Colors]</small>
+ <code>ColorMode</code> - 0 = mmidi colors with PFA gradient | 1 = PFA colors | 2 = mmidi | 3 = flat PFA
+ <code>Seed</code> - random number to use for color generation using mmidi's RNG code (default = 1)
+
+Colors can be set using any of the below syntaxes:
+- index can be 0 to 255, 00h to FFh, or 0x00 to 0xFF
+- colors can contain 3 or 4 components (RGB or RGBA)
+- color components can be separated by spaces, commas, or tabulators
+- color values are parsed the same way as indexes
+- gradients can be specified by separating the colors with a <code>|</code> (pipe)
+
+Examples:
+<code>
+100=69h, 0x56, 255
+64h=#6956FF
+33=255,0xFF,FFh,0x40|88h,88h,88h,FFh
+31h=#FFFFFF40,#888F
+</code>
+
+<footer>
+    <h4></h4>
+</footer>
+</body>
+</html>

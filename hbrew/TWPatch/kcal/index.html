@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KernelCalc - Shacked Woodmill</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="/dum.css"/>
+<meta property="og:title" content="KernelCalc - Shacked Woodmill" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="" />
+<meta property="og:description" content="TWPatch kernel calculator" />
+</head>
+<body>
+<h1>Kernel Calc</h1>
+
+<noscript>
+You have Javascript disabled!
+You can safely enable it though, as I don't use tracking.
+</noscript>
+
+<table>
+    <tr>
+        <th></th>
+        <th>X</th>
+        <th>Y</th>
+    </tr>
+    <tr>
+        <th>Input resolution</th>
+        <td><input id="resX" type="number" min="1" max="512" value="256" /></td>
+        <td><input id="resY" type="number" min="1" max="512" value="192" /></td>
+        <td><button onclick="regen()">Change</button></td>
+    </tr>
+    <tr>
+        <th>Input num</th>
+        <td><input id="scaleNX" type="number" min="1" max="8" value="5" /></td>
+        <td><input id="scaleNY" type="number" min="1" max="8" value="5" /></td>
+    </tr>
+    <tr>
+        <th>Input denom</th>
+        <td><input id="scaleDX" type="number" min="1" max="8" value="4" /></td>
+        <td><input id="scaleDY" type="number" min="1" max="8" value="4" /></td>
+    </tr>
+    <tr>
+        <th>Output resolution</th>
+        <td><label id="outX"></label></td>
+        <td><label id="outY"></label></td>
+        <td><label id="outA"></label></td>
+    </tr>
+</table>
+
+<div id="autogen"></div>
+
+<table>
+    <tr>
+        <th>Ratio mapping</th>
+        <th>Pixel mapping</th>
+    </tr>
+    <tr>
+        <td><canvas id="visualo" width="324px" height="244px"></canvas></td>
+        <td><canvas id="visuals" width="328px" height="248px"></canvas></td>
+        <td>
+            Legend:
+            <ul>
+                <li>Blue lines: input (original) pixels</li>
+                <li>Red lines: output (upscaled) pixels</li>
+                <li>Yellow dots: red output sampling blue input</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+
+<script language="javascript">
+
+var tablegen = document.getElementById("autogen");
+var canvas = document.getElementById("visualo");
+var canvasg = document.getElementById("visuals");
+var g = canvas.getContext("2d");
+var gs = canvasg.getContext("2d");
+
+function regen()
+{
+    tablegen.innerHTML = "";
+    
+    function gentable(data, wantx, wanty, what)
+    {
+        if(!data)
+            data = 1;
+        
+        var gen = document.createElement("table");
+        gen.style = "display: inline-block; margin-right: 2em;";
+        
+        for(var y = 0; y <= 8; y++)
+        {
+            var tr = document.createElement("tr");
+            
+            for(var x = 0; x <= 8; x++)
+            {
+                var felem = document.createElement((!y || !x) ? "th" : "td");
+                
+                if(!y)
+                    felem.innerHTML = !x ? what : ("" + x);
+                else if(!x)
+                    felem.innerHTML = "" + y;
+                else
+                {
+                    var val = data * x / y;
+                    
+                    if(val < 1)
+                    {
+                        felem.innerHTML = "-";
+                    }
+                    else
+                    {
+                        felem.innerHTML = "" + Math.round(val * 1000) / 1000;
+                        
+                        if(x == wantx && y == wanty)
+                        {
+                            felem.style = "border: 1px solid #CB4B16";
+                        }
+                        else
+                        {
+                            felem.style = "border: 1px solid #586E75";
+                        }
+                        
+                        if(what)
+                        {
+                            var sx = x;
+                            var sy = y;
+                            
+                            felem.onclick = new Function('return function(e){document.getElementById("scaleN'
+                                + what + '").value = ' + sx + ';document.getElementById("scaleD'
+                                + what + '").value = ' + sy + ';regen();}')();
+                        }
+                    }
+                }
+                
+                tr.appendChild(felem);
+            }
+            
+            gen.appendChild(tr);
+        }
+        
+        tablegen.appendChild(gen);
+    }
+    
+    function gcm(a, b)
+    {
+        if(a !== (a | 0))
+            return 1;
+        
+        if(b !== (b | 0))
+            return 1;
+        
+        a |= 0;
+        b |= 0;
+        
+        while(a != 0 && b != 0)
+        {
+            if(a > b)
+                a %= b;
+            else
+                b %= a;
+        }
+        
+        return !a ? b : a;
+    }
+    
+    var resx = document.getElementById("resX").value - 0;
+    var scalenx = document.getElementById("scaleNX").value - 0;
+    var scaledx = document.getElementById("scaleDX").value - 0;
+    
+    var resy = document.getElementById("resY").value - 0;
+    var scaleny = document.getElementById("scaleNY").value - 0;
+    var scaledy = document.getElementById("scaleDY").value - 0;
+    
+    var recx = resx * scalenx / scaledx;
+    var recy = resy * scaleny / scaledy;
+    
+    var intx = resx * scalenx * scaledy;
+    var inty = resy * scaleny * scaledx;
+    
+    var intdiv = gcm(intx, inty);
+    
+    document.getElementById("outX").innerHTML = recx;
+    document.getElementById("outY").innerHTML = recy;
+    document.getElementById("outA").innerHTML = (intx / intdiv) + " / " + (inty / intdiv);
+    
+    gentable(resx, scalenx, scaledx, "X");
+    gentable(resy, scaleny, scaledy, "Y");
+    
+    function drawcanvas(canvas, g, stretch)
+    {
+        var lineoffs = !stretch ? 4 : 8;
+        
+        var w = canvas.width - lineoffs;
+        var h = canvas.height - lineoffs;
+        
+        var x, y;
+        
+        if(!stretch)
+        {
+            x = Math.max(resx, recx);
+            y = Math.max(resy, recy);
+        }
+        else
+        {
+            x = recx;
+            y = recy;
+        }
+        
+        var cs = w / h;
+        var ds = x / y;
+        
+        debugger;
+        
+        var scx, scy;
+        
+        if(!stretch)
+        {
+            if(cs > ds) // too tall
+                scx = h / y;
+            else // too wide
+                scx = w / x;
+            
+            scy = scx;
+        }
+        else
+        {
+            scx = w / recx;
+            scy = h / recy;
+        }
+        
+        var stepx1 = (scx * resx / scalenx) | 0;
+        var stepx2 = (scx * resx / scaledx) | 0;
+        
+        var stepy1 = (scy * resy / scaleny) | 0;
+        var stepy2 = (scy * resy / scaledy) | 0;
+        
+        g.save();
+        
+        g.clearRect(0, 0, canvas.width, canvas.height);
+        
+        g.lineWidth = lineoffs;
+        
+        if(!!stretch)
+            g.translate(lineoffs / 2, lineoffs / 2)
+        
+        //red - scaled
+        g.strokeStyle = "#DC322F";
+        
+        g.beginPath();
+        g.moveTo(         0, 0);
+        g.lineTo(scx * recx, 0);
+        g.lineTo(scx * recx, scy * recy); // h == scy * recy
+        g.lineTo(         0, scy * recy);
+        g.lineTo(         0, 0);
+        g.closePath();
+        g.stroke();
+        
+        for(var i = 1; i < scalenx; i++)
+        {
+            g.beginPath();
+            g.moveTo(i * scx * resx / scaledx, 0);
+            g.lineTo(i * scx * resx / scaledx, scy * recy);
+            g.closePath();
+            g.stroke();
+        }
+        for(var i = 1; i < scaleny; i++)
+        {
+            g.beginPath();
+            g.moveTo(         0, i * scy * resy / scaledy);
+            g.lineTo(scx * recx, i * scy * resy / scaledy);
+            g.closePath();
+            g.stroke();
+        }
+        
+        if(!stretch)
+            g.translate(lineoffs / 2, lineoffs / 2)
+        else
+            g.globalCompositeOperation = "destination-over";
+        
+        // green - original
+        g.strokeStyle = "#2AA198";
+        
+        if(!stretch)
+        {
+            g.beginPath();
+            g.moveTo(         0, 0);
+            g.lineTo(scx * resx, 0);
+            g.lineTo(scx * resx, scy * resy);
+            g.lineTo(         0, scy * resy);
+            g.lineTo(         0, 0);
+            g.closePath();
+            g.stroke();
+            
+            for(var i = 1; i < scaledx; i++)
+            {
+                g.beginPath();
+                g.moveTo(i * scx * resx / scaledx, 0);
+                g.lineTo(i * scx * resx / scaledx, scy * resy);
+                g.closePath();
+                g.stroke();
+            }
+            for(var i = 1; i < scaledy; i++)
+            {
+                g.beginPath();
+                g.moveTo(         0, i * scy * resy / scaledy);
+                g.lineTo(scx * resx, i * scy * resy / scaledy);
+                g.closePath();
+                g.stroke();
+            }
+        }
+        else
+        {
+            g.beginPath();
+            g.moveTo(         0, 0);
+            g.lineTo(scx * recx, 0);
+            g.lineTo(scx * recx, scy * recy);
+            g.lineTo(         0, scy * recy);
+            g.lineTo(         0, 0);
+            g.closePath();
+            g.stroke();
+            
+            g.globalCompositeOperation = "lighten";
+            
+            for(var i = 1; i < scaledx; i++)
+            {
+                g.beginPath();
+                g.moveTo(i * scx * recx / scaledx, 0);
+                g.lineTo(i * scx * recx / scaledx, scy * recy);
+                g.closePath();
+                g.stroke();
+            }
+            
+            for(var i = 1; i < scaledy; i++)
+            {
+                g.beginPath();
+                g.moveTo(        0, i * scy * recy / scaledy);
+                g.lineTo(scx * recx, i * scy * recy / scaledy);
+                g.closePath();
+                g.stroke();
+            }
+            
+            g.globalCompositeOperation = "lighten";
+            
+            g.lineWidth *= 0.25;
+            
+            for(var j = 0; j < scaleny; j++)
+            {
+                for(var i = 0; i < scalenx; i++)
+                {
+                    g.beginPath();
+                    g.arc((i + 0.5) * scx * resx / scaledx, (j + 0.5) * scy * resy / scaledy,
+                        scx * resx * 0.0625 / scaledx, 0, Math.PI * 2);
+                    g.closePath();
+                    
+                    g.strokeStyle = "#2AA198";
+                    g.fill();
+                    
+                    g.strokeStyle = "#859900";
+                    g.stroke();
+                }
+            }
+        }
+        
+        g.restore();
+    }
+    
+    drawcanvas(canvas, g, false);
+    drawcanvas(canvasg, gs, true);
+}
+
+regen();
+
+//var can = document.getElementById("visual");
+//var c = can.getContext("2d", {alpha: true});
+</script>
+
+<footer>
+    <h4></h4>
+</footer>
+</body>
+</html>

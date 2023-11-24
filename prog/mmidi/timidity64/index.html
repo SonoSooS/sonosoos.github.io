@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>TiMidity++w32g - Shacked Woodmill</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="/dum.css"/>
+<meta property="og:title" content="TiMidity++w32g 64bit - Shacked Woodmill" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="" />
+<meta property="og:description" content="TiMidity++ 64bit update for Windows" />
+</head>
+<body>
+<h1>TiMidity++ 64bit</h1>
+
+TiMidity++ is an ancient software synthesizer and sequenced music player.
+
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#changes">Changes</a></li>
+<li><a href="#download">Downloads</a></li>
+</ul>
+
+<h3><a name="changes">Changes</a></h3>
+<ul>
+<li>Upgraded code to 64bit (original source code is incompatible with 64bit Windows)</li>
+<li>Did some obvious optimizations</li>
+<li>Added KDMAPI support</li>
+<li>Removed arbitrary limits</li>
+<li>Added 32bit signed integer and 32bit float output support</li>
+</ul>
+
+<h3>Bugs introduced</h3>
+<ul>
+<li>Stereo mode no longer works (the right channel is missing some things the left channel has)</li>
+<li>Some UI elements no longer work.
+I can't really fix this without a rewrite, because the original 32bit code was already jank :/</li>
+</ul>
+
+The other bugs are sadly unfixed.
+
+<h3><a name="download">Downloads</a></h3>
+<ul>
+<li><a href="data/">[Browse]</a></li>
+<li><a href="data/standalone/">TiMidity++ Windows application</a></li>
+<li><a href="data/headless/">synthesizer driver + player</a></li>
+</ul>
+
+
+<footer>
+    <h4></h4>
+</footer>
+</body>
+</html>

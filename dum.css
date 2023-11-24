@@ -1,0 +1,64 @@
+body, input
+{
+    font-family: 'SF Mono', 'Fira Code Retina', 'Fira Code', 'Consolas', 'EmojiOne Color', monospace, 'Comic Sans MS', 'Segoe UI';
+    background-color: #002B36;
+    color: #93A1A1;
+    white-space: pre-wrap;
+    font-size: 1em;
+}
+
+input
+{
+    border: 1px solid #586E75;
+}
+
+a
+{
+    color: #CB4B16;
+}
+
+h1
+{
+    border-bottom: 2px solid #586E75;
+    font-size: 2em;
+}
+
+h2
+{
+    border-bottom: 2px solid #586E75;
+    font-style: italic;
+    display: inline-block;
+    padding-right: 0.5em;
+    margin-top: -1em;
+    margin-left: 0.5em;
+}
+
+h3
+{
+    font-size: 1.2em;
+    display: inline-block;
+    padding-right: 0.5em;
+    margin-bottom: -1em;
+    margin-left: 1em;
+}
+
+quote
+{
+    font-size: 1em;
+    left: 3em;
+    display: table-cell;
+    font-style: italic;
+    border-bottom: 2px solid gray;
+    position: relative;
+}
+
+code
+{
+    background-color: #073642;
+    padding: 0.25em;
+}
+
+li, li > ul, li > ol
+{
+    margin-top: -1em;
+}
